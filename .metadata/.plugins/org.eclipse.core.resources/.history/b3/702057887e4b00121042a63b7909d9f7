@@ -1,0 +1,9 @@
+package com.dieptt.sleepingwell;
+
+public class IconView {
+
+	public IconView(FileBrowser fileBrowser, int iconId, String strFileName) {
+		// TODO Auto-generated constructor stub
+	}
+
+}

@@ -1,0 +1,51 @@
+package com.dieptt.sleepingwell;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+
+public class FileBrowser extends Activity implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener, AdapterView.OnItemSelectedListener {
+
+	private String[] mStrAudioExt;
+	private String[] mStrTextExt;
+	private String[] mStrVideoExt;
+	private String[] mStrWebExt;
+	private String[] mStrImageExt;
+	private String[] mStrArchiveExt;
+	private String[] mStrFilter;
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
+	}
+	
+	@Override
+	public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2,
+			long arg3) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onNothingSelected(AdapterView<?> arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int arg2,
+			long arg3) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+
+}

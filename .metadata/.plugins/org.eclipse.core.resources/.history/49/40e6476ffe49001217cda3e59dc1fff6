@@ -1,0 +1,65 @@
+package com.dieptt.sleepingwell;
+
+import java.io.File;
+import java.util.ArrayList;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
+import android.view.Menu;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+
+public class MainActivity extends Activity {
+
+    public ArrayList<String> GetFiles(String strDirPath) {
+    	Log.d("DIEP", "strDirPath = " + strDirPath);
+		// TODO Auto-generated method stub
+		ArrayList<String> arFiles = new ArrayList<String>();
+		File file = new File(strDirPath);
+		
+		file.mkdirs();
+		File[] files = file.listFiles();
+		
+		if (files.length == 0)
+			return null;
+		else
+		{
+			for (int i = 0; i < files.length; i++)
+				arFiles.add(files[i].getName());
+		}
+				
+		return arFiles;
+	}	
+
+	@Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+        
+    	// declare custom content
+    	final Button btnLoad = (Button)findViewById(R.id.btnLoad);
+    	final ListView lvSongPlay = (ListView)findViewById(R.id.lvSongList);
+    	
+    	
+    	Log.d("DIEP", "SDCard path = " + Environment.getExternalStorageDirectory().getPath());    	
+    	
+    	btnLoad.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				Log.d("DIEP", "btnLoad.OnClick");
+				// TODO Auto-generated method stub
+				ArrayList<String> arFilesInFolder = GetFiles(Environment.getExternalStorageDirectory().getPath() + "dieptt/sleepingwell");
+				Log.d("DIEP", "SDCard path = " + arFilesInFolder.get(0)); 
+				lvSongPlay.setAdapter( new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, arFilesInFolder) );
+				//lvSongPlay.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, arFilesInFolder));
+			}
+		});	
+    }  
+}

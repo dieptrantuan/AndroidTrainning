@@ -1,0 +1,310 @@
+package com.dieptt.sleepingwell;
+
+import java.io.File;
+import java.util.ArrayList;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.view.Display;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+
+public class FileBrowser extends Activity implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener, AdapterView.OnItemSelectedListener {
+
+	private String[] strAudioExt;
+	private String[] strTextExt;
+	private String[] strVideoExt;
+	private String[] strWebExt;
+	private String[] strImageExt;
+	private String[] strArchiveExt;
+	private String[] strFilter;
+	private GridView gvViewFile;
+	private File fCurrenFile;
+	private boolean bStandAlone;
+	private IconView ivLastSelected;
+	private ArrayList<File> arFiles;
+	
+	
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		
+		// init
+		arFiles = new ArrayList<File>();
+		strAudioExt = getResources().getStringArray(R.array.fileEndingAudio);
+		
+		Intent intent = getIntent();
+		String action = intent.getAction();
+		
+		if (action == null || action.compareTo(Intent.ACTION_MAIN) == 0)
+			bStandAlone = true;
+		else
+			bStandAlone = false;
+		
+		strFilter = intent.getStringArrayExtra("FileFilter");
+		
+		if(intent.getData() == null)
+			browseTo(new File("/"));
+		else
+			browseTo(new File(intent.getDataString()));
+		
+		Display display = getWindowManager().getDefaultDisplay();
+		
+		gvViewFile = new GridView(this);
+		gvViewFile.setNumColumns(display.getWidth() / 60);
+		gvViewFile.setOnItemClickListener(this);
+		gvViewFile.setOnItemLongClickListener(this);
+		gvViewFile.setOnItemSelectedListener(this);
+		gvViewFile.setAdapter(new IconAdapter());
+		
+		setContentView(gvViewFile);		
+	}
+	
+	private synchronized void browseTo(final File location) {
+		// TODO Auto-generated method stub
+		fCurrenFile = location;
+		
+		arFiles.clear();
+		
+		this.setTitle(fCurrenFile.getName().compareTo("") == 0 ? fCurrenFile.getPath() : fCurrenFile.getName());
+		
+		if(location.getParentFile() != null)
+			arFiles.add(fCurrenFile.getParentFile());
+		
+		for (File file : fCurrenFile.listFiles())
+		{
+			if(file.isDirectory())
+			{
+				arFiles.add(file);
+			}
+			else if(strFilter != null)
+			{
+				for(String ext : strFilter)
+				{
+					if(file.getName().endsWith(ext))
+					{
+						arFiles.add(file);
+						continue;
+					}
+				}
+			}
+			else
+			{
+				arFiles.add(file);
+			}
+		}
+		if(gvViewFile != null)
+			gvViewFile.setAdapter(new IconAdapter());
+	}
+
+	// class IconAdapter
+	public class IconAdapter extends BaseAdapter
+	{
+		@Override
+		public int getCount()
+		{
+			return arFiles.size();
+		}
+		
+		@Override
+		public Object getItem(int index)
+		{
+			return arFiles.get(index);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			// TODO Auto-generated method stub
+			return position;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			// TODO Auto-generated method stub
+			IconView icon;
+			File currentFile = arFiles.get(position);
+			
+			int iconId;
+			String strFileName;
+			
+			if(position == 0 && (currentFile.getParentFile() == null || currentFile.getParentFile().getAbsolutePath().compareTo(fCurrenFile.getAbsolutePath()) != 0 ))
+			{
+				iconId = R.drawable.updirectory;
+				strFileName = new String("..");
+			}
+			else
+			{
+				iconId = getIconId(position);
+				strFileName = currentFile.getName();
+			}
+			
+			if(convertView == null)
+			{
+				icon = new IconView(FileBrowser.this, iconId, strFileName);
+			}
+			else
+			{
+				icon = (IconView)convertView;
+				icon.setIconResId(iconId);
+				icon.setFileName(strFileName);
+			}
+			return icon;
+		}
+
+		private int getIconId(int position) {
+            File file = arFiles.get(index);
+            
+            if(file.isDirectory()) return R.drawable.directory;
+            
+            for(String ext : strAudioExt)
+            {
+                    if(file.getName().endsWith(ext)) return R.drawable.audio;
+            }
+             
+            return R.drawable.unknown;
+		}		
+	}
+	
+    @Override
+    public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long id)
+    {
+            File file = arFiles.get((int)id);
+            
+            if(file.isDirectory())
+            {
+                    browseTo(file);
+            }
+            else
+            {
+                    if(!bStandAlone)
+                    {
+                            // Send back the file that was selected
+                            Uri path = Uri.fromFile(file);
+                            Intent intent = new Intent(Intent.ACTION_PICK, path);
+                            setResult(RESULT_OK, intent);                   
+                            finish();
+                    }
+                    else
+                    {
+                            // Try to open it
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            intent.setDataAndType(Uri.fromFile(file), getMimeType(file));
+                            startActivity(Intent.createChooser(intent, null));
+                    }
+            }
+    }
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parentView, View view, int arg2, long id)
+    {
+            final File file = arFiles.get((int)id);
+            final File parent = file.getParentFile();
+            
+            new AlertDialog.Builder(FileBrowser.this)
+    .setIcon(android.R.drawable.ic_menu_agenda)
+    .setItems(R.array.file_options, new DialogInterface.OnClickListener() {
+        public void onClick(DialogInterface dialog, int whichButton) {
+            switch(whichButton)
+            {
+//          case 0: // Rename
+//                  file.renameTo(new File(parent, "Bubba.txt"));
+//                  browseTo(parent);
+//                  break;
+            case 0: // Delete
+                    file.delete();
+                    browseTo(parent);
+                    break;
+//          case 2: // Cut
+//                  break;
+//          case 3: // Copy
+//                  break;
+            case 1: // Send To...
+                    Intent intent = new Intent(Intent.ACTION_SEND);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.setType(getMimeType(file));
+                    intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                    startActivity(Intent.createChooser(intent, null));
+                    break;
+            }
+            dialog.dismiss();
+        }
+    })
+   .create().show();
+            
+            return true;
+    }
+    
+    private String getMimeType(File file)
+    {
+            for(String ext : mAudioExt)
+            {
+                    if(file.getName().endsWith(ext)) return "audio/*";
+            }
+            
+            for(String ext : mArchiveExt)
+            {
+                    if(file.getName().endsWith(ext)) return "archive/*";
+            }
+            
+            for(String ext : mImageExt)
+            {
+                    if(file.getName().endsWith(ext)) return "image/*";
+            }
+            
+            for(String ext : mWebExt)
+            {
+                    if(file.getName().endsWith(ext)) return "text/html";
+            }
+            
+            for(String ext : mTextExt)
+            {
+                    if(file.getName().endsWith(ext)) return "text/plain";
+            }
+            
+            for(String ext : mVideoExt)
+            {
+                    if(file.getName().endsWith(ext)) return "video/*";
+            }
+            
+            for(String ext : mGeoPosExt)
+            {
+                    if(file.getName().endsWith(ext)) return "audio/*";
+            }
+            
+            return "";
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> grid, View icon, int arg2, long index)
+    {
+            if(ivLastSelected != null)
+            {
+                    ivLastSelected.deselect();
+            }
+            
+            if(icon != null)
+            {
+                    ivLastSelected = (IconView)icon;
+                    ivLastSelected.select();
+            }
+            
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> grid)
+    {
+            if(ivLastSelected != null)
+            {
+                    ivLastSelected.deselect();
+                    ivLastSelected = null;
+            }
+    }
+	
+
+}
